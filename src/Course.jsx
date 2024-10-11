@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './Course.css';
 
 const Course = ({ id, course }) => (
-  <div className="col-md-4 mb-4">
+  <div className="col-md-3 col-lg-2 mb-4"> 
     <div className="card h-100">
       <div className="card-body">
         <h5 className="card-title">{course.term} CS {course.number}</h5>

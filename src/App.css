@@ -9,6 +9,10 @@
   justify-content: center;
 }
 
+.form-check-inline {
+  margin-right: 20px;
+}
+
 
 .App-logo {
   height: 40vmin;

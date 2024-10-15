@@ -16,3 +16,8 @@ hr {
   border-top: 1px solid #ddd;
   margin: 10px 0;
 }
+
+.selected-courses {
+  margin-top: 20px;
+}
+

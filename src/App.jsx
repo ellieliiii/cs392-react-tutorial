@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import Course from './Course';
+import CourseModal from './CourseModal'; 
 
 const App = () => {
   const [schedule, setSchedule] = useState({ title: '', courses: {} });
   const [loading, setLoading] = useState(true);
-  const [selectedTerm, setSelectedTerm] = useState('Fall'); // State to track selected term
-  const [selectedCourses, setSelectedCourses] = useState([]); // State to track selected courses
+  const [selectedTerm, setSelectedTerm] = useState('Fall'); 
+  const [selectedCourses, setSelectedCourses] = useState([]); 
+  const [showModal, setShowModal] = useState(false); 
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -40,47 +42,56 @@ const App = () => {
   // Get the selected courses from the schedule
   const selectedCourseDetails = selectedCourses.map(id => schedule.courses[id]);
 
+  const handleShowModal = () => setShowModal(true);
+  const handleCloseModal = () => setShowModal(false);
+
   return (
     <div className="container">
       <header className="my-4">
         <h1>{schedule.title}</h1>
       </header>
 
-      {/* Term filter radio buttons */}
-      <div className="mb-4">
-        <div className="form-check form-check-inline">
-          <input
-            className="form-check-input"
-            type="radio"
-            id="fall"
-            value="Fall"
-            checked={selectedTerm === 'Fall'}
-            onChange={() => setSelectedTerm('Fall')}
-          />
-          <label className="form-check-label" htmlFor="fall">Fall</label>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex">
+          <div className="form-check form-check-inline">
+            <input
+              className="form-check-input"
+              type="radio"
+              id="fall"
+              value="Fall"
+              checked={selectedTerm === 'Fall'}
+              onChange={() => setSelectedTerm('Fall')}
+            />
+            <label className="form-check-label" htmlFor="fall">Fall</label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              className="form-check-input"
+              type="radio"
+              id="spring"
+              value="Spring"
+              checked={selectedTerm === 'Spring'}
+              onChange={() => setSelectedTerm('Spring')}
+            />
+            <label className="form-check-label" htmlFor="spring">Spring</label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              className="form-check-input"
+              type="radio"
+              id="winter"
+              value="Winter"
+              checked={selectedTerm === 'Winter'}
+              onChange={() => setSelectedTerm('Winter')}
+            />
+            <label className="form-check-label" htmlFor="winter">Winter</label>
+          </div>
         </div>
-        <div className="form-check form-check-inline">
-          <input
-            className="form-check-input"
-            type="radio"
-            id="spring"
-            value="Spring"
-            checked={selectedTerm === 'Spring'}
-            onChange={() => setSelectedTerm('Spring')}
-          />
-          <label className="form-check-label" htmlFor="spring">Spring</label>
-        </div>
-        <div className="form-check form-check-inline">
-          <input
-            className="form-check-input"
-            type="radio"
-            id="winter"
-            value="Winter"
-            checked={selectedTerm === 'Winter'}
-            onChange={() => setSelectedTerm('Winter')}
-          />
-          <label className="form-check-label" htmlFor="winter">Winter</label>
-        </div>
+
+        {/* Button to open the modal, aligned to the right */}
+        <button className="btn btn-primary" onClick={handleShowModal}>
+          View Selected Courses
+        </button>
       </div>
 
       {loading ? (
@@ -103,7 +114,23 @@ const App = () => {
             )}
           </div>
 
-          {/* Display selected courses */}
+
+          
+
+          {/* Course modal */}
+          <CourseModal
+            show={showModal}
+            handleClose={handleCloseModal}
+            selectedCourses={selectedCourseDetails}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+          
+          {/* Display selected courses
           <div className="my-4">
             <h2>Selected Courses</h2>
             {selectedCourseDetails.length === 0 ? (
@@ -122,6 +149,6 @@ const App = () => {
       )}
     </div>
   );
-};
+}; */}
 
 export default App;

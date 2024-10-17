@@ -13,42 +13,73 @@
   margin-right: 20px;
 }
 
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Modal Styling */
+.list-group-item {
+  font-size: 1rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.modal-content {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.modal-header, .modal-footer {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 20px;
+  font-size: 1rem;
+}
+
+.modal-footer {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  justify-content: flex-end;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-secondary {
+  background-color: #6c757d;
+  border: none;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.btn-secondary:hover {
+  background-color: #5a6268;
 }
 
-button {
-  font-size: calc(10px + 2vmin);
+/* Adjust card width for better readability */
+.card {
+  max-width: 220px; 
+  margin: auto;  
+}
+
+.card-body {
+  padding: 15px;
+}
+
+.card-text {
+  margin-top: 10px; 
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 10px 0;
+}
+
+/* Styles for unselectable courses */
+.unselectable {
+  opacity: 0.6; /* Fainter color */
+  position: relative;
+}
+
+.unselectable .badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }

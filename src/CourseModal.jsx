@@ -1,8 +1,14 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import './CourseModal.css'
+import './App.css'; // Reuse App.css for modal styles
 
 const CourseModal = ({ show, handleClose, selectedCourses }) => {
+  // Function to format 'meets' string
+  const formatMeets = (meets) => {
+    const [days, times] = meets.split(' ');
+    return `${days}: ${times}`;
+  };
+
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
@@ -12,10 +18,11 @@ const CourseModal = ({ show, handleClose, selectedCourses }) => {
         {selectedCourses.length === 0 ? (
           <p>No courses selected.</p>
         ) : (
-          <ul>
+          <ul className="list-group">
             {selectedCourses.map(course => (
-              <li key={course.number}>
-                {course.term} CS {course.number}: {course.title} ({course.meets})
+              <li key={course.number} className="list-group-item">
+                <strong>{course.term} CS {course.number}</strong>: {course.title} <br />
+                <em>{formatMeets(course.meets)}</em>
               </li>
             ))}
           </ul>

@@ -27,23 +27,116 @@ const App = () => {
     fetchSchedule();
   }, []);
 
+  /**
+   * Extracts the start time in minutes from the 'meets' string.
+   * @param {string} meets - The meeting time string (e.g., "MWF 11:00-11:50").
+   * @returns {number} - The start time in minutes since midnight.
+   */
+  const getStartTime = (meets) => {
+    const timeMatch = meets.match(/(\d{1,2}):(\d{2})/);
+    if (timeMatch) {
+      const hour = parseInt(timeMatch[1], 10);
+      const minute = parseInt(timeMatch[2], 10);
+      return hour * 60 + minute; // Convert to minutes since midnight
+    }
+    return 0; // Default to midnight if no match
+  };
+
+  /**
+   * Sorts an array of courses based on their start times.
+   * @param {Array} coursesArray - Array of course entries.
+   * @returns {Array} - Sorted array of course entries.
+   */
+  const sortCoursesByStartTime = (coursesArray) => {
+    return coursesArray.sort(([idA, courseA], [idB, courseB]) => {
+      const startA = getStartTime(courseA.meets);
+      const startB = getStartTime(courseB.meets);
+      return startA - startB;
+    });
+  };
+
+  /**
+   * Determines if two courses have overlapping meeting times.
+   * @param {Object} courseA - First course object.
+   * @param {Object} courseB - Second course object.
+   * @returns {boolean} - True if courses overlap, else false.
+   */
+  const isOverlapping = (courseA, courseB) => {
+    const [daysA, timeA] = courseA.meets.split(' ');
+    const [startA, endA] = timeA.split('-').map(time => {
+      const [hour, minute] = time.split(':').map(Number);
+      return hour * 60 + minute;
+    });
+
+    const [daysB, timeB] = courseB.meets.split(' ');
+    const [startB, endB] = timeB.split('-').map(time => {
+      const [hour, minute] = time.split(':').map(Number);
+      return hour * 60 + minute;
+    });
+
+    // Check if any day overlaps
+    const overlappingDays = daysA.split('').some(day => daysB.includes(day));
+    if (!overlappingDays) return false;
+
+    // Check if time overlaps
+    return startA < endB && startB < endA;
+  };
+
   // Filter courses based on the selected term
-  const coursesArray = Object.entries(schedule.courses).filter(([id, course]) => course.term === selectedTerm);
+  const filteredCourses = Object.entries(schedule.courses).filter(
+    ([id, course]) => course.term === selectedTerm
+  );
+
+  // Sort the filtered courses by start time
+  const sortedCoursesArray = sortCoursesByStartTime(filteredCourses);
 
   // Toggle course selection
   const toggleSelect = (courseId) => {
+    const courseToToggle = schedule.courses[courseId];
+
     if (selectedCourses.includes(courseId)) {
-      setSelectedCourses(selectedCourses.filter(id => id !== courseId)); // Deselect course
+      // Unselecting the course; no conflict check needed
+      setSelectedCourses(selectedCourses.filter(id => id !== courseId));
     } else {
-      setSelectedCourses([...selectedCourses, courseId]); // Select course
+      // Check for conflicts with already selected courses
+      for (let id of selectedCourses) {
+        const selectedCourse = schedule.courses[id];
+        if (isOverlapping(selectedCourse, courseToToggle)) {
+          alert(`Cannot select "${courseToToggle.title}" because it conflicts with "${selectedCourse.title}".`);
+          return;
+        }
+      }
+
+      // Select the course
+      setSelectedCourses([...selectedCourses, courseId]);
     }
   };
 
   // Get the selected courses from the schedule
   const selectedCourseDetails = selectedCourses.map(id => schedule.courses[id]);
 
+  // Handle modal open and close
   const handleShowModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
+
+  // Function to determine if a course is unselectable
+  const getUnselectableCourses = () => {
+    const unselectable = {};
+    sortedCoursesArray.forEach(([id, course]) => {
+      if (!selectedCourses.includes(id)) {
+        // Check if this course overlaps with any selected course
+        const conflict = selectedCourses.some(selectedId => 
+          isOverlapping(schedule.courses[selectedId], course)
+        );
+        if (conflict) {
+          unselectable[id] = true;
+        }
+      }
+    });
+    return unselectable;
+  };
+
+  const unselectableCourses = getUnselectableCourses();
 
   return (
     <div className="container">
@@ -51,6 +144,7 @@ const App = () => {
         <h1>{schedule.title}</h1>
       </header>
 
+      {/* Flex container for term selectors and modal button */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex">
           <div className="form-check form-check-inline">
@@ -99,23 +193,21 @@ const App = () => {
       ) : (
         <>
           <div className="row">
-            {coursesArray.length === 0 ? (
+            {sortedCoursesArray.length === 0 ? (
               <p>No courses available for the selected term.</p>
             ) : (
-              coursesArray.map(([id, course]) => (
+              sortedCoursesArray.map(([id, course]) => (
                 <Course
                   key={id}
                   id={id}
                   course={course}
                   isSelected={selectedCourses.includes(id)}
                   toggleSelect={toggleSelect}
+                  isUnselectable={unselectableCourses[id]} // New prop
                 />
               ))
             )}
           </div>
-
-
-          
 
           {/* Course modal */}
           <CourseModal
@@ -128,27 +220,5 @@ const App = () => {
     </div>
   );
 };
-
-          
-          {/* Display selected courses
-          <div className="my-4">
-            <h2>Selected Courses</h2>
-            {selectedCourseDetails.length === 0 ? (
-              <p>No courses selected.</p>
-            ) : (
-              <ul>
-                {selectedCourseDetails.map(course => (
-                  <li key={course.number}>
-                    {course.term} CS {course.number}: {course.title} ({course.meets})
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}; */}
 
 export default App;

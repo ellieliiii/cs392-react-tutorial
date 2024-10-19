@@ -1,5 +1,7 @@
+src/Course.css
+
 .card {
-  max-width: 200px; 
+  max-width: 200px; /* Adjusted in App.css */
   margin: auto;  
 }
 
@@ -20,4 +22,3 @@ hr {
 .selected-courses {
   margin-top: 20px;
 }
-

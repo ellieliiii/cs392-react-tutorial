@@ -1,6 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css'; // Reuse App.css for modal styles
+import { Link } from 'react-router-dom'; // Import Link
 
 const Course = ({ id, course, isSelected, toggleSelect, isUnselectable }) => {
   // Function to format 'meets' string
@@ -34,6 +35,11 @@ const Course = ({ id, course, isSelected, toggleSelect, isUnselectable }) => {
             </label>
           </div>
           {isUnselectable && <span className="badge badge-danger ml-2">X</span>}
+
+          {/* Edit Button */}
+          <Link to={`/edit/${id}`} className="btn btn-sm btn-outline-secondary mt-2">
+            <i className="bi bi-pencil"></i> 
+          </Link>
         </div>
       </div>
     </div>

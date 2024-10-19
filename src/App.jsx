@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css'; // Import Bootstrap Icons
 import './App.css';
 import Course from './Course';
 import CourseModal from './CourseModal'; 
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import EditCourse from './EditCourse'; // Import EditCourse component
 
 const App = () => {
   const [schedule, setSchedule] = useState({ title: '', courses: {} });
@@ -139,85 +142,114 @@ const App = () => {
   const unselectableCourses = getUnselectableCourses();
 
   return (
-    <div className="container">
-      <header className="my-4">
-        <h1>{schedule.title}</h1>
-      </header>
+    <Router>
+      <div className="container">
+        <header className="my-4">
+          <h1>{schedule.title}</h1>
+        </header>
 
-      {/* Flex container for term selectors and modal button */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="d-flex">
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              id="fall"
-              value="Fall"
-              checked={selectedTerm === 'Fall'}
-              onChange={() => setSelectedTerm('Fall')}
-            />
-            <label className="form-check-label" htmlFor="fall">Fall</label>
-          </div>
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              id="spring"
-              value="Spring"
-              checked={selectedTerm === 'Spring'}
-              onChange={() => setSelectedTerm('Spring')}
-            />
-            <label className="form-check-label" htmlFor="spring">Spring</label>
-          </div>
-          <div className="form-check form-check-inline">
-            <input
-              className="form-check-input"
-              type="radio"
-              id="winter"
-              value="Winter"
-              checked={selectedTerm === 'Winter'}
-              onChange={() => setSelectedTerm('Winter')}
-            />
-            <label className="form-check-label" htmlFor="winter">Winter</label>
-          </div>
-        </div>
+        {/* Define Routes */}
+        <Routes>
+          {/* Home Route */}
+          <Route path="/" element={
+            <>
+              {/* Flex container for term selectors and modal button */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div className="d-flex">
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="fall"
+                      value="Fall"
+                      checked={selectedTerm === 'Fall'}
+                      onChange={() => setSelectedTerm('Fall')}
+                    />
+                    <label className="form-check-label" htmlFor="fall">Fall</label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="spring"
+                      value="Spring"
+                      checked={selectedTerm === 'Spring'}
+                      onChange={() => setSelectedTerm('Spring')}
+                    />
+                    <label className="form-check-label" htmlFor="spring">Spring</label>
+                  </div>
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      id="winter"
+                      value="Winter"
+                      checked={selectedTerm === 'Winter'}
+                      onChange={() => setSelectedTerm('Winter')}
+                    />
+                    <label className="form-check-label" htmlFor="winter">Winter</label>
+                  </div>
+                </div>
 
-        {/* Button to open the modal, aligned to the right */}
-        <button className="btn btn-primary" onClick={handleShowModal}>
-          View Selected Courses
-        </button>
+                {/* Button to open the modal, aligned to the right */}
+                <button className="btn btn-primary" onClick={handleShowModal}>
+                  View Selected Courses
+                </button>
+              </div>
+
+              {loading ? (
+                <p>Loading...</p>
+              ) : (
+                <>
+                  <div className="row">
+                    {sortedCoursesArray.length === 0 ? (
+                      <p>No courses available for the selected term.</p>
+                    ) : (
+                      sortedCoursesArray.map(([id, course]) => (
+                        <Course
+                          key={id}
+                          id={id}
+                          course={course}
+                          isSelected={selectedCourses.includes(id)}
+                          toggleSelect={toggleSelect}
+                          isUnselectable={unselectableCourses[id]} // New prop
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Display selected courses */}
+                  <div className="my-4">
+                    <h2>Selected Courses</h2>
+                    {selectedCourseDetails.length === 0 ? (
+                      <p>No courses selected.</p>
+                    ) : (
+                      <ul>
+                        {selectedCourseDetails.map(course => (
+                          <li key={course.number}>
+                            {course.term} CS {course.number}: {course.title} ({course.meets})
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {/* Course modal */}
+                  <CourseModal
+                    show={showModal}
+                    handleClose={handleCloseModal}
+                    selectedCourses={selectedCourseDetails}
+                  />
+                </>
+              )}
+            </>
+          } />
+
+          {/* Edit Course Route */}
+          <Route path="/edit/:id" element={<EditCourse schedule={schedule} setSchedule={setSchedule} />} />
+        </Routes>
       </div>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <div className="row">
-            {sortedCoursesArray.length === 0 ? (
-              <p>No courses available for the selected term.</p>
-            ) : (
-              sortedCoursesArray.map(([id, course]) => (
-                <Course
-                  key={id}
-                  id={id}
-                  course={course}
-                  isSelected={selectedCourses.includes(id)}
-                  toggleSelect={toggleSelect}
-                  isUnselectable={unselectableCourses[id]} // New prop
-                />
-              ))
-            )}
-          </div>
-
-          {/* Course modal */}
-          <CourseModal
-            show={showModal}
-            handleClose={handleCloseModal}
-            selectedCourses={selectedCourseDetails}
-          />
-        </>
-      )}
-    </div>
+    </Router>
   );
 };
 

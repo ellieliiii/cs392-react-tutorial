@@ -83,3 +83,17 @@ hr {
   top: 10px;
   right: 10px;
 }
+
+/* Edit Course Form Styling */
+form .form-group {
+  margin-bottom: 15px;
+}
+
+form label {
+  font-weight: bold;
+}
+
+form input,
+form select {
+  width: 100%;
+}

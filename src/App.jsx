@@ -218,22 +218,6 @@ const App = () => {
                     )}
                   </div>
 
-                  {/* Display selected courses */}
-                  <div className="my-4">
-                    <h2>Selected Courses</h2>
-                    {selectedCourseDetails.length === 0 ? (
-                      <p>No courses selected.</p>
-                    ) : (
-                      <ul>
-                        {selectedCourseDetails.map(course => (
-                          <li key={course.number}>
-                            {course.term} CS {course.number}: {course.title} ({course.meets})
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
                   {/* Course modal */}
                   <CourseModal
                     show={showModal}

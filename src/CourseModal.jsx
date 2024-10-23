@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import './App.css'; // Reuse App.css for modal styles
+import './App.css'; // Ensure App.css contains necessary styles
 
 const CourseModal = ({ show, handleClose, selectedCourses }) => {
   // Function to format 'meets' string

@@ -1,15 +1,14 @@
-// src/EditCourse.jsx
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { ref, set } from "firebase/database"; // Import 'set' for updating data
+import { database } from "./utilities/firebase"; // Import the initialized database
 
-const EditCourse = ({ schedule, setSchedule }) => {
-  const { id } = useParams(); // Get course ID from URL
+const EditCourse = ({ schedule }) => {
+  const { id } = useParams();
   const navigate = useNavigate();
 
   // Ensure the course exists
-  if (!schedule.courses[id]) {
+  if (!schedule[id]) {
     return (
       <div className="container my-4">
         <h2>Course Not Found</h2>
@@ -18,7 +17,7 @@ const EditCourse = ({ schedule, setSchedule }) => {
     );
   }
 
-  const course = schedule.courses[id];
+  const course = schedule[id];
 
   // Initialize form state with existing course data
   const [formData, setFormData] = useState({
@@ -44,9 +43,7 @@ const EditCourse = ({ schedule, setSchedule }) => {
   };
 
   // Regular expression to validate meeting times
-  // Example of valid format: "MWF 11:00-11:50"
   const meetsRegex = /^(MWF|TuTh)\s+(\d{1,2}:\d{2}-\d{1,2}:\d{2})$/;
-
 
   // Handle form submission with validation
   const handleSubmit = (e) => {
@@ -65,7 +62,7 @@ const EditCourse = ({ schedule, setSchedule }) => {
     if (formData.meets.trim() !== '') {
       const match = formData.meets.trim().match(meetsRegex);
       if (!match) {
-        newErrors.meets = 'Meeting time must be in the format "Days HH:MM-HH:MM", e.g., "MWF 11:00-11:50".';
+        newErrors.meets = 'Meeting time must be in the format "MWF HH:MM-HH:MM" or "TuTh HH:MM-HH:MM", e.g., "MWF 11:00-11:50".';
         valid = false;
       } else {
         // Extract days and times
@@ -86,22 +83,21 @@ const EditCourse = ({ schedule, setSchedule }) => {
     setErrors(newErrors);
 
     if (valid) {
-      // Update the schedule state
-      setSchedule(prevSchedule => ({
-        ...prevSchedule,
-        courses: {
-          ...prevSchedule.courses,
-          [id]: {
-            term: formData.term,
-            number: formData.number.replace(/^CS/, ''), // Remove "CS" prefix
-            meets: formData.meets,
-            title: formData.title,
-          },
-        },
-      }));
-
-      // Navigate back to home page
-      navigate('/');
+      // Update Firebase Realtime Database
+      set(ref(database, `courses/${id}`), {
+        term: formData.term,
+        number: formData.number.replace(/^CS/, ''), // Remove "CS" prefix
+        meets: formData.meets,
+        title: formData.title,
+      })
+        .then(() => {
+          // Navigate back to home page after successful update
+          navigate('/');
+        })
+        .catch((error) => {
+          console.error("Error updating course:", error);
+          alert("Failed to update the course. Please try again.");
+        });
     }
   };
 
@@ -158,7 +154,7 @@ const EditCourse = ({ schedule, setSchedule }) => {
             name="meets"
             value={formData.meets}
             onChange={handleChange}
-            placeholder="e.g., MWF 11:00-11:50"
+            placeholder="e.g., MWF 11:00-11:50 or TuTh 09:30-10:45"
             required
           />
           {errors.meets && <div className="invalid-feedback">{errors.meets}</div>}

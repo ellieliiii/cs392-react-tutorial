@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ref, set } from "firebase/database"; // Import 'set' for updating data
-import { database } from "./utilities/firebase"; // Import the initialized database
+import { ref, set } from "firebase/database";
+import { database } from "./utilities/firebase";
+import useFormData from './useFormData'; // Adjust the path as needed
 
 const EditCourse = ({ schedule }) => {
   const { id } = useParams();
@@ -19,70 +20,59 @@ const EditCourse = ({ schedule }) => {
 
   const course = schedule[id];
 
-  // Initialize form state with existing course data
-  const [formData, setFormData] = useState({
-    term: course.term,
-    number: "CS" + course.number,
-    meets: course.meets,
-    title: course.title,
-  });
 
-  // State for validation errors
-  const [errors, setErrors] = useState({
-    title: '',
-    meets: '',
-  });
+  const validate = (data) => {
+    const errors = {};
 
-  // Handle form input changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  // Regular expression to validate meeting times
-  const meetsRegex = /^(MWF|TuTh)\s+(\d{1,2}:\d{2}-\d{1,2}:\d{2})$/;
-
-  // Handle form submission with validation
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    let valid = true;
-    let newErrors = { title: '', meets: '' };
-
-    // 1. Validate Course Title
-    if (formData.title.trim().length < 2) {
-      newErrors.title = 'Course title must be at least two characters.';
-      valid = false;
+    // Validate Course Title
+    if (data.title.trim().length < 2) {
+      errors.title = 'Course title must be at least two characters.';
     }
 
-    // 2. Validate Meeting Times
-    if (formData.meets.trim() !== '') {
-      const match = formData.meets.trim().match(meetsRegex);
+    // Validate Meeting Times
+    if (data.meets.trim() !== '') {
+      const meetsRegex = /^(MWF|TuTh)\s+(\d{1,2}:\d{2}-\d{1,2}:\d{2})$/;
+      const match = data.meets.trim().match(meetsRegex);
       if (!match) {
-        newErrors.meets = 'Meeting time must be in the format "MWF HH:MM-HH:MM" or "TuTh HH:MM-HH:MM", e.g., "MWF 11:00-11:50".';
-        valid = false;
+        errors.meets = 'Meeting time must be in the format "MWF HH:MM-HH:MM" or "TuTh HH:MM-HH:MM", e.g., "MWF 11:00-11:50".';
       } else {
-        // Extract days and times
+        // Extract times for additional validation
         const [_, days, timespan] = match;
         const [startTime, endTime] = timespan.split('-').map(time => {
           const [hour, minute] = time.split(':').map(Number);
           return hour * 60 + minute; // Convert to minutes since midnight
         });
 
-        // Check if start time is before end time
         if (startTime >= endTime) {
-          newErrors.meets = 'Start time must be before end time.';
-          valid = false;
+          errors.meets = 'Start time must be before end time.';
         }
       }
     }
 
-    setErrors(newErrors);
+    return errors;
+  };
 
-    if (valid) {
+  // Initialize useFormData hook
+  const {
+    formData,
+    errors,
+    handleChange,
+    handleValidate,
+  } = useFormData(
+    {
+      term: course.term,
+      number: "CS" + course.number,
+      meets: course.meets,
+      title: course.title,
+    },
+    validate
+  );
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (handleValidate()) {
       // Update Firebase Realtime Database
       set(ref(database, `courses/${id}`), {
         term: formData.term,

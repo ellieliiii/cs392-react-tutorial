@@ -1,17 +1,20 @@
+// src/App.jsx
+
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css'; // Import Bootstrap Icons
 import './App.css';
 import Course from './Course';
-import CourseModal from './CourseModal'; 
+import CourseModal from './CourseModal';
+import Navigation from '../components/Navigation'; // Import Navigation component
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import EditCourse from './EditCourse'; // Import EditCourse component
 import useFirebase from './useFirebase'; // Import the custom hook
 
 const App = () => {
-  const [selectedTerm, setSelectedTerm] = useState('Fall'); 
-  const [selectedCourses, setSelectedCourses] = useState([]); 
-  const [showModal, setShowModal] = useState(false); 
+  const [selectedTerm, setSelectedTerm] = useState('Fall');
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   // Use the custom hook to fetch courses data
   const { data: schedule, loading, error } = useFirebase('courses');
@@ -133,6 +136,9 @@ const App = () => {
   return (
     <Router>
       <div className="container">
+        {/* Navigation Bar */}
+        <Navigation />
+
         <header className="my-4">
           <h1>CS Courses Schedule</h1>
         </header>

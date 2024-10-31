@@ -1,15 +1,72 @@
-import React from 'react';
+// src/EditCourse.jsx
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ref, set } from "firebase/database";
-import { database } from "./utilities/firebase";
-import useFormData from './useFormData'; // Adjust the path as needed
+import { database, useProfile } from "./utilities/firebase"; // Adjust the path as needed
 
 const EditCourse = ({ schedule }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [{ user, isAdmin }, isLoading, error] = useProfile(); // Get user and admin status
+
+  // Initialize form state with default values
+  const [formData, setFormData] = useState({
+    term: '',
+    number: '',
+    meets: '',
+    title: '',
+  });
+
+  // State for validation errors
+  const [errors, setErrors] = useState({
+    title: '',
+    meets: '',
+  });
+
+  // Use useEffect to set formData once course data is available
+  useEffect(() => {
+    if (schedule && schedule[id]) {
+      const course = schedule[id];
+      setFormData({
+        term: course.term || '',
+        number: "CS" + (course.number || ''),
+        meets: course.meets || '',
+        title: course.title || '',
+      });
+    }
+  }, [schedule, id]);
+
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="container my-4">
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container my-4">
+        <h2>Error loading profile</h2>
+        <p>{error.message}</p>
+      </div>
+    );
+  }
+
+  // Check if user is an admin
+  if (!isAdmin) {
+    return (
+      <div className="container my-4">
+        <h2>Access Denied</h2>
+        <p>You must be an administrator to edit course information.</p>
+      </div>
+    );
+  }
 
   // Ensure the course exists
-  if (!schedule[id]) {
+  if (!schedule || !schedule[id]) {
     return (
       <div className="container my-4">
         <h2>Course Not Found</h2>
@@ -18,61 +75,56 @@ const EditCourse = ({ schedule }) => {
     );
   }
 
-  const course = schedule[id];
+  // Handle form input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
+  // Regular expression to validate meeting times
+  const meetsRegex = /^(MWF|TuTh)\s+(\d{1,2}:\d{2}-\d{1,2}:\d{2})$/;
 
-  const validate = (data) => {
-    const errors = {};
+  // Handle form submission with validation
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    let valid = true;
+    let newErrors = { title: '', meets: '' };
 
     // Validate Course Title
-    if (data.title.trim().length < 2) {
-      errors.title = 'Course title must be at least two characters.';
+    if (formData.title.trim().length < 2) {
+      newErrors.title = 'Course title must be at least two characters.';
+      valid = false;
     }
 
     // Validate Meeting Times
-    if (data.meets.trim() !== '') {
-      const meetsRegex = /^(MWF|TuTh)\s+(\d{1,2}:\d{2}-\d{1,2}:\d{2})$/;
-      const match = data.meets.trim().match(meetsRegex);
+    if (formData.meets.trim() !== '') {
+      const match = formData.meets.trim().match(meetsRegex);
       if (!match) {
-        errors.meets = 'Meeting time must be in the format "MWF HH:MM-HH:MM" or "TuTh HH:MM-HH:MM", e.g., "MWF 11:00-11:50".';
+        newErrors.meets = 'Meeting time must be in the format "MWF HH:MM-HH:MM" or "TuTh HH:MM-HH:MM", e.g., "MWF 11:00-11:50".';
+        valid = false;
       } else {
-        // Extract times for additional validation
+        // Extract times
         const [_, days, timespan] = match;
         const [startTime, endTime] = timespan.split('-').map(time => {
           const [hour, minute] = time.split(':').map(Number);
-          return hour * 60 + minute; // Convert to minutes since midnight
+          return hour * 60 + minute;
         });
 
+        // Check if start time is before end time
         if (startTime >= endTime) {
-          errors.meets = 'Start time must be before end time.';
+          newErrors.meets = 'Start time must be before end time.';
+          valid = false;
         }
       }
     }
 
-    return errors;
-  };
+    setErrors(newErrors);
 
-  // Initialize useFormData hook
-  const {
-    formData,
-    errors,
-    handleChange,
-    handleValidate,
-  } = useFormData(
-    {
-      term: course.term,
-      number: "CS" + course.number,
-      meets: course.meets,
-      title: course.title,
-    },
-    validate
-  );
-
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (handleValidate()) {
+    if (valid) {
       // Update Firebase Realtime Database
       set(ref(database, `courses/${id}`), {
         term: formData.term,
@@ -81,7 +133,6 @@ const EditCourse = ({ schedule }) => {
         title: formData.title,
       })
         .then(() => {
-          // Navigate back to home page after successful update
           navigate('/');
         })
         .catch((error) => {
@@ -96,7 +147,7 @@ const EditCourse = ({ schedule }) => {
       <h2>Edit Course</h2>
       <form onSubmit={handleSubmit} noValidate>
         {/* Display Validation Errors */}
-        { (errors.title || errors.meets) && (
+        {(errors.title || errors.meets) && (
           <div className="alert alert-danger">
             {errors.title && <div>{errors.title}</div>}
             {errors.meets && <div>{errors.meets}</div>}
@@ -114,6 +165,7 @@ const EditCourse = ({ schedule }) => {
             onChange={handleChange}
             required
           >
+            <option value="">Select Term</option>
             <option value="Fall">Fall</option>
             <option value="Spring">Spring</option>
             <option value="Winter">Winter</option>
@@ -132,6 +184,7 @@ const EditCourse = ({ schedule }) => {
             onChange={handleChange}
             required
           />
+          {errors.number && <div className="invalid-feedback">{errors.number}</div>}
         </div>
 
         {/* Meeting Times */}
